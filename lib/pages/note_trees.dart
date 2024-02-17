@@ -233,6 +233,22 @@ class _MyTreeViewState extends State<MyTreeView> {
                         onTap: () => deleteNote(entry.node),
                         child: const Text('Delete'),
                       ),
+                      PopupMenuItem<String>(
+                        onTap: () async {
+                          await Clipboard.setData(
+                            ClipboardData(text: entry.node.toJson()),
+                          ).then((_) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text("Notes copied to clipboard as JSON"),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          });
+                        },
+                        child: const Text('Copy to Clipboard as JSON'),
+                      ),
                     ],
                   );
                 },
