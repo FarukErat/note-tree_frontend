@@ -248,7 +248,7 @@ class _MyTreeViewState extends State<MyTreeView> {
                         )
                       : const Icon(
                           Icons.circle,
-                          size: 12,
+                          size: 10,
                         ),
                 ),
               ),
