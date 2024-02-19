@@ -34,11 +34,11 @@ class AuthState extends State<Auth> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  Future<void> _handleSignUp() async {
+  Future<void> _handleRegister() async {
     final String username = usernameController.text;
     final String password = passwordController.text;
 
-    final result = await signUp(username, password);
+    final result = await register(username, password);
 
     String message = "";
     switch (result.$1) {
@@ -49,8 +49,7 @@ class AuthState extends State<Auth> {
           return;
         }
         // save session id to file
-        final file = File(sessionIdPath);
-        file.writeAsStringSync(sessionId!);
+        saveSessionIdToFile(sessionId!);
         // get notes
         _loadNotePage();
         break;
@@ -84,8 +83,7 @@ class AuthState extends State<Auth> {
           return;
         }
         // save session id to file
-        final file = File(sessionIdPath);
-        file.writeAsStringSync(sessionId!);
+        saveSessionIdToFile(sessionId!);
         // get notes
         await _loadNotePage();
         break;
@@ -108,14 +106,10 @@ class AuthState extends State<Auth> {
     }
   }
 
-  Future<void> loadNotesFromDb() async {
+  Future<void> _loadNotePage() async {
     final result = await getNotesFromDb(sessionId);
     globalNotes = result.$2;
     globalNotes.saveToFile();
-  }
-
-  Future<void> _loadNotePage() async {
-    await loadNotesFromDb();
     if (mounted) {
       Navigator.pushReplacement(
         context,
@@ -128,11 +122,7 @@ class AuthState extends State<Auth> {
 
   @override
   Widget build(BuildContext context) {
-    try {
-      sessionId = getSessionIdFromFile();
-    } catch (e) {
-      log(e.toString());
-    }
+    sessionId = getSessionIdFromFile();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Auth Page'),
@@ -154,44 +144,16 @@ class AuthState extends State<Auth> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError) {
-              return Center(
+              log(snapshot.error.toString());
+              return const Center(
                 child: Text(
-                  snapshot.error.toString(),
-                  style: const TextStyle(fontSize: 18),
+                  "An error occurred",
+                  style: TextStyle(fontSize: 18),
                 ),
               );
             } else if (snapshot.hasData) {
-              if (snapshot.data != 200) {
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextField(
-                        controller: usernameController,
-                        decoration:
-                            const InputDecoration(labelText: 'Username'),
-                      ),
-                      TextField(
-                        controller: passwordController,
-                        obscureText: true,
-                        decoration:
-                            const InputDecoration(labelText: 'Password'),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _handleSignUp,
-                        child: const Text('Sign Up'),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _handleLogin,
-                        child: const Text('Login'),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
+              // if session id is valid
+              if (snapshot.data == 200) {
                 return Center(
                   child: Column(
                     children: [
@@ -223,7 +185,11 @@ class AuthState extends State<Auth> {
                           sessionId = null;
                           final file = File(sessionIdPath);
                           if (file.existsSync()) {
-                            file.deleteSync();
+                            try {
+                              file.deleteSync();
+                            } on FileSystemException catch (e) {
+                              log('Failed to delete session ID: $e');
+                            }
                           }
                           if (mounted) {
                             Navigator.of(context)
@@ -233,6 +199,37 @@ class AuthState extends State<Auth> {
                           }
                         },
                         child: const Text('Log Out'),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                // if session id is not valid
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TextField(
+                        controller: usernameController,
+                        decoration:
+                            const InputDecoration(labelText: 'Username'),
+                      ),
+                      TextField(
+                        controller: passwordController,
+                        obscureText: true,
+                        decoration:
+                            const InputDecoration(labelText: 'Password'),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _handleRegister,
+                        child: const Text('Register'),
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: _handleLogin,
+                        child: const Text('Login'),
                       ),
                     ],
                   ),

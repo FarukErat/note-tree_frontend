@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 
 import 'package:note_tree/models/note_model.dart';
 
-const String apiUrl = "http://localhost:8085/api/";
+const String host = "10.0.2.2";
+const String apiUrl = "http://$host:8085/api";
 
 /// 200: session is valid
 ///
@@ -12,7 +13,7 @@ Future<int> isSessionIdValid(String? sessionId) async {
   if (sessionId == null) {
     return 401;
   }
-  final Uri uri = Uri.parse("${apiUrl}authentication/secret");
+  final Uri uri = Uri.parse("$apiUrl/authentication/secret");
   final Map<String, String> headers = {
     'Cookie': 'SID=$sessionId',
   };
@@ -28,8 +29,9 @@ Future<int> isSessionIdValid(String? sessionId) async {
 /// 400: bad credentials
 ///
 /// 409: username is already taken
-Future<(int, String?, String?)> signUp(String username, String password) async {
-  final Uri uri = Uri.parse("${apiUrl}authentication/signup");
+Future<(int, String?, String?)> register(
+    String username, String password) async {
+  final Uri uri = Uri.parse("$apiUrl/authentication/signup");
 
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -66,7 +68,7 @@ Future<(int, String?, String?)> signUp(String username, String password) async {
 ///
 /// 404: username not found
 Future<(int, String?, String?)> login(String username, String password) async {
-  final Uri uri = Uri.parse("${apiUrl}authentication/login");
+  final Uri uri = Uri.parse("$apiUrl/authentication/login");
 
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -103,7 +105,7 @@ Future<int> logout(String? sessionId) async {
     return 401;
   }
 
-  final Uri uri = Uri.parse("${apiUrl}authentication/logout");
+  final Uri uri = Uri.parse("$apiUrl/authentication/logout");
 
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -126,7 +128,7 @@ Future<(int, List<Note>)> getNotesFromDb(String? sessionId) async {
     return (401, <Note>[]);
   }
 
-  final Uri uri = Uri.parse("${apiUrl}note/get-notes");
+  final Uri uri = Uri.parse("$apiUrl/note/get-notes");
 
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
@@ -139,7 +141,7 @@ Future<(int, List<Note>)> getNotesFromDb(String? sessionId) async {
   );
 
   if (response.statusCode == 200) {
-    return (response.statusCode, NoteListFromJson.fromJsonList(response.body));
+    return (response.statusCode, NoteListFromJson.fromJson(response.body));
   } else {
     return (response.statusCode, <Note>[]);
   }
@@ -153,14 +155,14 @@ Future<int> saveNotesToDb(String? sessionId, List<Note> note) async {
     return 401;
   }
 
-  final Uri uri = Uri.parse("${apiUrl}note/save-notes");
+  final Uri uri = Uri.parse("$apiUrl/note/save-notes");
 
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
     'Cookie': 'SID=$sessionId',
   };
 
-  final String jsonBody = note.toJsonList();
+  final String jsonBody = note.toJson();
 
   var response = await http.post(
     uri,
