@@ -14,8 +14,10 @@ class Note {
 
   factory Note.fromMap(Map<String, dynamic> map) {
     return Note(
-      content: map['content'],
-      children: (map['children'] as List).map((i) => Note.fromMap(i)).toList(),
+      content: map['content'] ?? '',
+      children: ((map['children'] ?? []) as List)
+          .map((i) => Note.fromMap(i))
+          .toList(),
     );
   }
   Map<String, dynamic> toMap() {
@@ -31,7 +33,7 @@ class Note {
 
 extension NoteListFromJson on List<Note> {
   static List<Note> fromJsonList(String source) {
-    List<Map<String, dynamic>> json = jsonDecode(source);
+    List<dynamic> json = jsonDecode(source);
     return json.map((e) => Note.fromMap(e)).toList();
   }
 }
