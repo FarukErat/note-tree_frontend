@@ -31,7 +31,7 @@ class Note {
 
 extension NoteListFromJson on List<Note> {
   static List<Note> fromJsonList(String source) {
-    List<dynamic> json = jsonDecode(source);
+    List<Map<String, dynamic>> json = jsonDecode(source);
     return json.map((e) => Note.fromMap(e)).toList();
   }
 }
