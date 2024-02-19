@@ -214,12 +214,14 @@ class AuthState extends State<Auth> {
                         controller: usernameController,
                         decoration:
                             const InputDecoration(labelText: 'Username'),
+                            maxLength: 20,
                       ),
                       TextField(
                         controller: passwordController,
                         obscureText: true,
                         decoration:
                             const InputDecoration(labelText: 'Password'),
+                            maxLength: 20,
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(

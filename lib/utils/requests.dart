@@ -31,7 +31,7 @@ Future<int> isSessionIdValid(String? sessionId) async {
 /// 409: username is already taken
 Future<(int, String?, String?)> register(
     String username, String password) async {
-  final Uri uri = Uri.parse("$apiUrl/authentication/signup");
+  final Uri uri = Uri.parse("$apiUrl/authentication/register");
 
   final Map<String, String> headers = {
     'Content-Type': 'application/json',
