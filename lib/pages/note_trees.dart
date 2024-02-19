@@ -79,7 +79,7 @@ class _MyTreeViewState extends State<MyTreeView> {
           FloatingActionButton(
             onPressed: () async {
               await Clipboard.setData(
-                ClipboardData(text: globalNotes.toJsonList()),
+                ClipboardData(text: widget.notes.toJsonList()),
               ).then((_) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
