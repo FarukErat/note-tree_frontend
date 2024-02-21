@@ -34,6 +34,53 @@ class AuthState extends State<Auth> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  @override
+  Widget build(BuildContext context) {
+    sessionId = getSessionIdFromFile();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Auth Page'),
+        backgroundColor: Colors.brown[200],
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pushReplacement(MaterialPageRoute(
+                builder: (context) => notesPage(globalNotes),
+              ));
+            },
+            child: const Icon(Icons.arrow_back),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.brown[200],
+      body: FutureBuilder(
+        future: isSessionIdValid(sessionId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              log(snapshot.error.toString());
+              return const Center(
+                child: Text(
+                  "An error occurred",
+                  style: TextStyle(fontSize: 18),
+                ),
+              );
+            } else if (snapshot.hasData) {
+              // if session id is valid
+              if (snapshot.data == 200) {
+                return authSuccess(context);
+              } else {
+                // if session id is not valid
+                return authFail();
+              }
+            }
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+
   Future<void> _handleRegister() async {
     final String username = usernameController.text;
     final String password = passwordController.text;
@@ -120,127 +167,85 @@ class AuthState extends State<Auth> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    sessionId = getSessionIdFromFile();
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Auth Page'),
-        backgroundColor: Colors.brown[200],
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pushReplacement(MaterialPageRoute(
-                builder: (context) => notesPage(globalNotes),
-              ));
-            },
-            child: const Icon(Icons.arrow_back),
+  Padding authFail() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          TextField(
+            controller: usernameController,
+            decoration: const InputDecoration(labelText: 'Username'),
+            maxLength: 20,
+          ),
+          TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(labelText: 'Password'),
+            maxLength: 20,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _handleRegister,
+            child: const Text('Register'),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: _handleLogin,
+            child: const Text('Login'),
           ),
         ],
       ),
-      backgroundColor: Colors.brown[200],
-      body: FutureBuilder(
-        future: isSessionIdValid(sessionId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              log(snapshot.error.toString());
-              return const Center(
-                child: Text(
-                  "An error occurred",
-                  style: TextStyle(fontSize: 18),
-                ),
-              );
-            } else if (snapshot.hasData) {
-              // if session id is valid
-              if (snapshot.data == 200) {
-                return Center(
-                  child: Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          saveNotesToDb(sessionId, globalNotes);
-                          if (mounted) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => notesPage(globalNotes),
-                              ),
-                            );
-                          }
-                        },
-                        child: const Text('Save Notes'),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () async {
-                          await _loadNotePage();
-                        },
-                        child: const Text('Retrieve Saved Notes'),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () async {
-                          await logout(sessionId);
-                          sessionId = null;
-                          final file = File(sessionIdPath);
-                          if (file.existsSync()) {
-                            try {
-                              file.deleteSync();
-                            } on FileSystemException catch (e) {
-                              log('Failed to delete session ID: $e');
-                            }
-                          }
-                          if (mounted) {
-                            Navigator.of(context)
-                                .pushReplacement(MaterialPageRoute(
-                              builder: (context) => const AuthPage(),
-                            ));
-                          }
-                        },
-                        child: const Text('Log Out'),
-                      ),
-                    ],
-                  ),
-                );
-              } else {
-                // if session id is not valid
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TextField(
-                        controller: usernameController,
-                        decoration:
-                            const InputDecoration(labelText: 'Username'),
-                            maxLength: 20,
-                      ),
-                      TextField(
-                        controller: passwordController,
-                        obscureText: true,
-                        decoration:
-                            const InputDecoration(labelText: 'Password'),
-                            maxLength: 20,
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _handleRegister,
-                        child: const Text('Register'),
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _handleLogin,
-                        child: const Text('Login'),
-                      ),
-                    ],
+    );
+  }
+
+  Center authSuccess(BuildContext context) {
+    return Center(
+      child: Column(
+        children: [
+          ElevatedButton(
+            onPressed: () {
+              saveNotesToDb(sessionId, globalNotes);
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => notesPage(globalNotes),
                   ),
                 );
               }
-            }
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
+            },
+            child: const Text('Save Notes'),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () async {
+              await _loadNotePage();
+            },
+            child: const Text('Retrieve Saved Notes'),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () async {
+              await logout(sessionId);
+              sessionId = null;
+              final file = File(sessionIdPath);
+              if (file.existsSync()) {
+                try {
+                  file.deleteSync();
+                } on FileSystemException catch (e) {
+                  log('Failed to delete session ID: $e');
+                }
+              }
+              if (mounted) {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(
+                  builder: (context) => const AuthPage(),
+                ));
+              }
+            },
+            child: const Text('Log Out'),
+          ),
+        ],
       ),
     );
   }
