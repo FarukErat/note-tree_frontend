@@ -50,7 +50,7 @@ class Note {
 
 bool isMapValidNote(Map<String, dynamic> map) {
   // Check if map contains all required keys
-  if (!map.keys.every((e) => e == 'content' || e == 'children')) {
+  if(!map.containsKey('content') || !map.containsKey('children')) {
     return false;
   }
   // Check if map values are of correct type
