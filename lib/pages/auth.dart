@@ -226,22 +226,21 @@ class AuthState extends State<Auth> {
           ),
           const SizedBox(height: 12),
           ElevatedButton(
-            onPressed: () async {
-              await logout(sessionId);
-              sessionId = null;
-              final file = File(sessionIdPath);
-              if (file.existsSync()) {
-                try {
-                  file.deleteSync();
-                } on FileSystemException catch (e) {
-                  log('Failed to delete session ID: $e');
+            onPressed: () {
+              logout(sessionId).then((_) {
+                sessionId = null;
+                final file = File(sessionIdPath);
+                if (file.existsSync()) {
+                  try {
+                    file.deleteSync();
+                  } on FileSystemException catch (e) {
+                    log('Failed to delete session ID: $e');
+                  }
                 }
-              }
-              if (mounted) {
                 Navigator.of(context).pushReplacement(MaterialPageRoute(
                   builder: (context) => const AuthPage(),
                 ));
-              }
+              });
             },
             child: const Text('Log Out'),
           ),
